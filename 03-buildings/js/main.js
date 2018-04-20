@@ -10,6 +10,10 @@ d3.json("data/buildings.json").then(function (data) {
 
     var rects = svg.selectAll("rect").data(data);
 
+    var y = d3.scaleLinear()
+        .domain([0, 828])
+        .range([0, 400]);
+
     rects.enter().append("rect")
         .attr("x", function (d, i) {
             return (i * 60);
@@ -17,7 +21,7 @@ d3.json("data/buildings.json").then(function (data) {
         .attr("y", 50)
         .attr("width", 40)
         .attr("height", function (d) {
-            return d.height;
+            return y(d.height);
         })
         .attr("fill", "grey");
 
