@@ -1,25 +1,33 @@
+let margin = {left: 100, right: 10, top: 10, bottom: 100};
+
+let width = 600 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
 let svg = d3.select("#chart-area")
     .append("svg")
-    .attr("width", "400")
-    .attr("height", "400");
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
-d3.json("data/buildings.json").then(function (data) {
-    data.forEach(function (d) {
+d3.json("data/buildings.json").then((data) => {
+    data.forEach(d => {
         d.height = +d.height;
     });
 
     let rects = svg.selectAll("rect").data(data);
 
     let y = d3.scaleLinear()
-        .domain([0, 828])
-        .range([0, 400]);
+        .domain([0, d3.max(data, (d) => {
+            return d.height;
+        })])
+        .range([0, height]);
 
     let x = d3.scaleBand()
-        .domain(["Burj Khalifa", "Shanghai Tower",
-            "Abraj Al-Bait Clock Tower", "Ping An Finance Centre",
-            "Lotte World Tower", "One World Trade Center",
-            "Guangzhou CTF Finance Center"])
-        .range([0, 400])
+        .domain(data.map((d) => {
+            return d.name;
+        }))
+        .range([0, width])
         .paddingInner(0.3)
         .paddingOuter(0.3);
 
@@ -29,11 +37,11 @@ d3.json("data/buildings.json").then(function (data) {
         })
         .attr("y", 50)
         .attr("width", x.bandwidth())
-        .attr("height", function (d) {
+        .attr("height", (d) => {
             return y(d.height);
         })
         .attr("fill", "grey");
 
-}).catch(function (error) {
+}).catch((error) => {
     console.log(error);
 });
