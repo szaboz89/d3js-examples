@@ -10,6 +10,22 @@ let svg = d3.select("#chart-area")
     .append("g")
     .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
+let xAxisGroup = svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")");
+
+let yAxisGroup = svg.append("g")
+    .attr("class", "y axis");
+
+// X Scale
+let x = d3.scaleBand()
+    .range([0, width])
+    .padding(0.2);
+
+// Y Scale
+let y = d3.scaleLinear()
+    .range([height, 0]);
+
 // X Label
 svg.append("text")
     .attr("y", height + 50)
@@ -33,37 +49,34 @@ d3.json("data/revenues.json").then(function (data) {
         d.revenue = +d.revenue;
     });
 
-    // X Scale
-    let x = d3.scaleBand()
-        .domain(data.map(function (d) {
-            return d.month
-        }))
-        .range([0, width])
-        .padding(0.2);
+    d3.interval(() => {
+        update(data);
+    }, 1000);
 
-    // Y Scale
-    let y = d3.scaleLinear()
-        .domain([0, d3.max(data, function (d) {
-            return d.revenue
-        })])
-        .range([height, 0]);
+    // Run the vis for the first time
+    update(data);
+});
+
+function update(data) {
+    x.domain(data.map(function (d) {
+        return d.month
+    }));
+    y.domain([0, d3.max(data, function (d) {
+        return d.revenue
+    })]);
 
     // X Axis
     let xAxisCall = d3.axisBottom(x);
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxisCall);
+    xAxisGroup.call(xAxisCall);
 
     // Y Axis
     let yAxisCall = d3.axisLeft(y)
         .tickFormat(function (d) {
             return "$" + d;
         });
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxisCall);
+    yAxisGroup.call(yAxisCall);
 
+    /*
     // Bars
     let rects = svg.selectAll("rect")
         .data(data);
@@ -81,4 +94,5 @@ d3.json("data/revenues.json").then(function (data) {
         })
         .attr("width", x.bandwidth)
         .attr("fill", "grey");
-});
+        */
+}
