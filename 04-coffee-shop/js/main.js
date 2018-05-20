@@ -5,6 +5,8 @@ let width = 600 - margin.left - margin.right,
 
 let flag = true;
 
+let t = d3.transition().duration(750);
+
 let svg = d3.select("#chart-area")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -53,7 +55,8 @@ d3.json("data/revenues.json").then(function (data) {
     });
 
     d3.interval(() => {
-        update(data);
+        let newData = flag ? data : data.slice(1);
+        update(newData);
         flag = !flag
     }, 1000);
 
@@ -73,50 +76,53 @@ function update(data) {
 
     // X Axis
     let xAxisCall = d3.axisBottom(x);
-    xAxisGroup.call(xAxisCall);
+    xAxisGroup.transition(t).call(xAxisCall);
 
     // Y Axis
     let yAxisCall = d3.axisLeft(y)
         .tickFormat(function (d) {
             return "$" + d;
         });
-    yAxisGroup.call(yAxisCall);
+    yAxisGroup.transition(t).call(yAxisCall);
 
     // Bars
     // JOIN new data with old elements.
     let rects = svg.selectAll("rect")
-        .data(data);
+        .data(data, function (d) {
+            return d.month;
+        });
 
     // EXIT old elements not present in new data.
-    rects.exit().remove();
-
-    // UPDATE old elements present in new data.
-    rects
-        .attr("y", function (d) {
-            return y(d[value]);
-        })
-        .attr("x", function (d) {
-            return x(d.month)
-        })
-        .attr("height", function (d) {
-            return height - y(d[value]);
-        })
-        .attr("width", x.bandwidth);
+    rects.exit()
+        .attr("fill", "red")
+        .transition(t)
+        .attr("y", y(0))
+        .attr("height", 0)
+        .remove();
 
     // ENTER new elements present in new data.
     rects.enter()
         .append("rect")
-        .attr("y", function (d) {
-            return y(d[value]);
-        })
+        .attr("y", y(0))
         .attr("x", function (d) {
             return x(d.month)
         })
-        .attr("height", function (d) {
-            return height - y(d[value]);
+        .attr("height", 0)
+        .attr("width", x.bandwidth)
+        .attr("fill", "grey")
+        // AND UPDATE old elements present in new data.
+        .merge(rects)
+        .transition(t)
+        .attr("x", function (d) {
+            return x(d.month)
         })
         .attr("width", x.bandwidth)
-        .attr("fill", "grey");
+        .attr("y", function (d) {
+            return y(d[value]);
+        })
+        .attr("height", function (d) {
+            return height - y(d[value]);
+        });
 
     let label = flag ? "Revenue" : "Profit";
     yLabel.text(label);
