@@ -12,6 +12,18 @@ let g = d3.select("#chart-area")
 
 let time = 0;
 
+// Tooltip
+let tip = d3.tip().attr('class', 'd3-tip')
+    .html(function (d) {
+        let text = "<strong>Country:</strong> <span style='color:red'>" + d.country + "</span><br>";
+        text += "<strong>Continent:</strong> <span style='color:red;text-transform:capitalize'>" + d.continent + "</span><br>";
+        text += "<strong>Life Expectancy:</strong> <span style='color:red'>" + d3.format(".2f")(d.life_exp) + "</span><br>";
+        text += "<strong>GDP Per Capita:</strong> <span style='color:red'>" + d3.format("$,.0f")(d.income) + "</span><br>";
+        text += "<strong>Population:</strong> <span style='color:red'>" + d3.format(",.0f")(d.population) + "</span><br>";
+        return text;
+    });
+g.call(tip);
+
 // Scales
 let x = d3.scaleLog()
     .base(10)
@@ -65,6 +77,29 @@ g.append("g")
     .attr("class", "y axis")
     .call(yAxisCall);
 
+// Legend
+let continents = ["europe", "asia", "americas", "africa"];
+
+let legend = g.append("g")
+    .attr("transform", "translate(" + (width - 10) + "," + (height - 125) + ")");
+
+continents.forEach(function (continent, i) {
+    let legendRow = legend.append("g")
+        .attr("transform", "translate(0, " + (i * 20) + ")");
+
+    legendRow.append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", continentColor(continent));
+
+    legendRow.append("text")
+        .attr("x", -10)
+        .attr("y", 10)
+        .attr("text-anchor", "end")
+        .style("text-transform", "capitalize")
+        .text(continent);
+});
+
 d3.json("data/data.json").then(function (data) {
     // Clean data
     const formattedData = data.map(function (year) {
@@ -110,6 +145,8 @@ function update(data) {
         .attr("fill", function (d) {
             return continentColor(d.continent);
         })
+        .on("mouseover", tip.show)
+        .on("mouseout", tip.hide)
         // MERGE
         .merge(circles)
         .transition(t)
