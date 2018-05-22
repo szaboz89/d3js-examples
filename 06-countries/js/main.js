@@ -11,6 +11,8 @@ let g = d3.select("#chart-area")
     .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
 let time = 0;
+let interval;
+let formattedData;
 
 // Tooltip
 let tip = d3.tip().attr('class', 'd3-tip')
@@ -102,7 +104,7 @@ continents.forEach(function (continent, i) {
 
 d3.json("data/data.json").then(function (data) {
     // Clean data
-    const formattedData = data.map(function (year) {
+    formattedData = data.map(function (year) {
         return year["countries"].filter(function (country) {
             return (country.income && country.life_exp);
         }).map(function (country) {
@@ -112,24 +114,55 @@ d3.json("data/data.json").then(function (data) {
         })
     });
 
-    // Run the code every 0.1 second
-    d3.interval(function () {
-        // At the end of our data, loop back
-        time = (time < 214) ? time + 1 : 0;
-        update(formattedData[time]);
-    }, 100);
-
     // First run of the visualization
     update(formattedData[0]);
 });
+
+// Action buttons
+$("#play-button").on("click", function () {
+    let button = $(this);
+    if (button.text() === "Play") {
+        button.text("Pause");
+        interval = setInterval(step, 100);
+    }
+    else {
+        button.text("Play");
+        clearInterval(interval);
+    }
+});
+
+$("#reset-button").on("click", function () {
+    time = 0;
+    update(formattedData[0]);
+});
+
+$("#continent-select").on("change", function () {
+    update(formattedData[time]);
+});
+
+function step() {
+    // At the end of our data, loop back
+    time = (time < 214) ? time + 1 : 0;
+    update(formattedData[time]);
+}
 
 function update(data) {
     // Standard transition time for the visualization
     let t = d3.transition().duration(100);
 
+    let continent = $("#continent-select").val();
+
+    let filteredData = data.filter(function (d) {
+        if (continent === "all") {
+            return true;
+        } else {
+            return d.continent === continent;
+        }
+    });
+
     // JOIN new data with old elements.
     let circles = g.selectAll("circle")
-        .data(data, function (d) {
+        .data(filteredData, function (d) {
             return d.country;
         });
 
