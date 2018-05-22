@@ -13,9 +13,14 @@
     padding: 5px 0;
 }
 
-#reset-button, #play-button {
+#reset-button, #play-button, #slider-div {
     float: left;
     margin-right: 10px;
+}
+
+#slider-div {
+    width:300px;
+    margin-left:10px;
 }
 
 #reset-button, #play-button {
